@@ -50,8 +50,8 @@ If a condition is not met, then return empty `Optional`.
 2. The rent period must be in months.
 3. The rent currency must be **USD**.
 4. The rent amount must be greater than **0**.
-5. The coefficient is equal to rent divided by the divider provided in percent (`rent / divider * 100%`).
-6. If the relation is more than **100%**, **100%** should be returned.
+5. The coefficient is equal to rent divided by the divider provided in percent (`rent / divider * 100`).
+6. If the relation is more than **100%**, `InsuranceCoefficient.MAX` should be returned.
 7. The default value is `Optional.empty`
 
 #### priceAndRoomsAndAreaDependentInsurance
@@ -118,7 +118,7 @@ a person has relative to the threshold provided.
 
 1. A person must have a `family`.
 2. A person must have `children`.
-3. The resulting coefficient equals to `max(100, childrenCount / threshold)`.
+3. The resulting coefficient equals to `min(100, childrenCount / childrenCountThreshold)`.
 4. `InsuranceCoefficient.MIN` must return if any of the conditions are not met.
 
 #### employmentDependentInsurance
@@ -144,7 +144,7 @@ of an accommodation owned or rented by a person.
 1. A person must have an accommodation.
 2. The calculator must pick the accommodation that is the smallest in area.
 3. Check to make sure its `emergencyStatus` is listed in the `statuses` parameter.
-4. The coefficient is calculated as `100 * (1 - status.ordinal() / totalStatuses)`.
+4. The coefficient is calculated as `100 * (1 - emergencyStatus.ordinal() / EmergencyStatus.values().length)`.
 5. If any of the conditions are not met, `Optional.empty` must be returned.
 
 #### injuryAndRentDependentInsurance
@@ -152,8 +152,8 @@ of an accommodation owned or rented by a person.
 Accepts `BigInteger rentThreshold`.
 
 1. A person must have an injury.
-2. The injury must have been caused by someone else.
+2. This person must be a culprit of the last injury they have.
 3. The largest accommodation (by area) must be rented.
 4. The rent must be in **GBP**.
-5. The coefficient is calculated as `max(100, 100 * rent / threshold)`.
+5. The coefficient is calculated as `min(100, 100 * rent / rentThreshold)`.
 6. If any of the conditions are not met, `Optional.empty` must be returned.

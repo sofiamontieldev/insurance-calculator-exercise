@@ -24,4 +24,18 @@ public record InsuranceCoefficient(int coefficient) {
   public static InsuranceCoefficient of(BigInteger coefficient) {
     return new InsuranceCoefficient(coefficient.intValueExact());
   }
+
+  static InsuranceCoefficient  priceCoefficient(
+          BigInteger price,
+          BigInteger priceXTwo,
+          BigInteger priceXThree) {
+    if (price.compareTo(priceXThree) >= 0) {
+      return InsuranceCoefficient.MAX;
+    }
+    if (price.compareTo(priceXTwo) >= 0) {
+      return InsuranceCoefficient.MED;
+    }
+    return InsuranceCoefficient.MIN;
+  }
+
 }

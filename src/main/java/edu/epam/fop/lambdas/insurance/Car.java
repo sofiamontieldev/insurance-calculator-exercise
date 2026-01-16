@@ -33,6 +33,7 @@ public final class Car implements Subject {
     return this.manufactureDate;
   }
 
+
   public LocalDate purchaseDate() {
     return this.purchaseDate;
   }

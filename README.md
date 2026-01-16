@@ -1,16 +1,16 @@
-# Insurance Calculator (Java – Optional & Functional Style)
+# Insurance Calculator (Java – `Optional` & Functional Style)
 
-This project is a practice-oriented exercise focused on modeling insurance calculation rules using Java Optional and a functional approach (map, filter, flatMap), with strong emphasis on null-safety and test-driven design.
+This project is a practice-oriented exercise focused on modeling insurance calculation rules using Java `Optional` and a functional approach (map, filter, flatMap), with strong emphasis on `nulll`-safety and test-driven design.
 
-The goal is to express complex business rules declaratively while avoiding defensive null checks and exceptions.
+The goal is to express complex business rules declaratively while avoiding defensive `nulll` checks and exceptions.
 
 ---
 
 ## Objective
 
-- Practice advanced usage of Optional
+- Practice advanced usage of `Optional`
 - Model real-world insurance rules in a functional style
-- Ensure null-safety across all policies
+- Ensure `nulll`-safety across all policies
 - Strictly comply with business rules validated by tests
 
 ---
@@ -19,35 +19,26 @@ The goal is to express complex business rules declaratively while avoiding defen
 
 ### Insurance Model
 
-- Subject (sealed interface)
-- Car, Accommodation, Person
-- Currency
-- RepeatablePayment (rent, salary, etc.)
-- Injury, Family
+- `Subject` (sealed interface)
+- `Car`, `Accommodation`, `Person`
+- `Currency`
+- `RepeatablePayment` (rent, salary, etc.)
+- `Injury`, `Family`
 
 Key characteristics:
-- Some getters return Optional
-- Some entities implement Comparable
+- Some getters return `Optional`
+- Some entities implement `Comparable`
 - No business logic inside domain objects
 
 ---
 
-### Calculator Layer
+## Calculator Layer
 
-- InsuranceCoefficient – value in range [0–100]
-- InsuranceCalculator<S> – functional interface
-- InsurancePolicies – rule definitions
+- **InsuranceCoefficient** — value in range `[0–100]`
+- **InsuranceCalculator** — functional interface
+- **InsurancePolicies** — rule definitions
 
-Each policy returns Optional<InsuranceCoefficient> depending on whether all conditions are met.
-
----
-
-## General Rules
-
-- No exceptions are thrown
-- All logic is null-safe
-- Any object or collection may be null
-- If requirements are not met, Optional.empty() is returned
+Each policy returns `Optional<InsuranceCoefficient>` depending on whether all conditions are met.
 
 ---
 
@@ -55,65 +46,63 @@ Each policy returns Optional<InsuranceCoefficient> depending on whether all cond
 
 ### Accommodation
 
-rentDependentInsurance  
-Monthly USD rent required.  
-Coefficient formula:  
-min(100, rent / divider * 100)
+- **rentDependentInsurance**  
+  Monthly USD rent required  
+  coefficient = `min(100, rent / divider * 100)`
 
-priceAndRoomsAndAreaDependentInsurance  
-All thresholds must be met to return MAX, otherwise MIN.
+- **priceAndRoomsAndAreaDependentInsurance**  
+  All thresholds must be met to return **MAX**, otherwise **MIN**
 
 ---
 
 ### Car
 
-ageDependentInsurance
-- Less than 1 year → MAX
-- Less than 5 years → 70
-- Less than 10 years → 30
-- 10 years or more → MIN
+- **ageDependentInsurance**
+  - **< 1 year** — **MAX**
+  - **< 5 years** — `70`
+  - **< 10 years** — `30`
+  - **≥ 10 years** — **MIN**
 
-priceAndOwningOfFreshCarInsurance
-- Price ≥ 3 × threshold → MAX
-- 2 × threshold ≤ price < 3 × threshold → 50
-- Price < 2 × threshold → MIN
+- **priceAndOwningOfFreshCarInsurance**
+  - **≥ 3 × threshold** — **MAX**
+  - **≥ 2 × threshold** — `50`
+  - **< 2 × threshold** — **MIN**
 
 ---
 
 ### Person
 
-childrenDependent  
-Coefficient formula:  
-min(100, childrenCount * 100 / threshold)
+- **childrenDependent**  
+  coefficient = `min(100, children * 100 / threshold)`
 
-employmentDependentInsurance  
-Returns 50 if all employment, salary, and account conditions are met.
+- **employmentDependentInsurance**  
+  Returns `50` if all employment, salary, and account conditions are met
 
-accommodationEmergencyInsurance  
-Selects the smallest accommodation by area.  
-Coefficient formula:  
-100 * (1 - emergencyStatus.ordinal / totalStatuses)
+- **accommodationEmergencyInsurance**  
+  Smallest accommodation by area is selected  
+  coefficient = `100 * (1 - emergencyStatus.ordinal / totalStatuses)`
 
-injuryAndRentDependentInsurance  
-Largest rented accommodation in GBP.  
-Coefficient formula:  
-min(100, rent * 100 / rentThreshold)
+- **injuryAndRentDependentInsurance**  
+  Largest rented accommodation (`GBP`)  
+  coefficient = `min(100, rent * 100 / rentThreshold)`
 
 ---
 
 ## Approach
 
-- Progressive filtering using Optional
-- No nested conditionals
-- Explicit handling of edge cases
+My implementation focuses on:
+- Progressive filtering using `Optional`
+- Avoiding nested conditionals
+- Treating `nulll` and empty collections as valid states
 - Tests used as the main source of truth
-- Clarity over premature abstraction
+- Preferred clarity over premature abstraction
 
+Each policy was refined iteratively by aligning the logic strictly with the expected behavior defined in tests, especially in edge cases involving `nulll`, empty collections, and boundary values.
 ---
 
 ## Key Learnings
 
-- Optional chains can replace defensive code
-- Tests often reveal hidden requirements
+- `Optional` chains can replace defensive code
+- Tests often reveal _implicit_ requirements
 - Functional composition improves readability
 - Small rule misinterpretations can break correctness

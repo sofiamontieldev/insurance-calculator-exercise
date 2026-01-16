@@ -1,159 +1,207 @@
-# Insurance calculator
+# Insurance Calculator (Java – Optional & Functional Style)
 
-The purpose of this task is to practice with Optional, and its main methods - `map`, `filter`, `flatMap`, etc.
+This project is a practice-oriented exercise focused on designing insurance calculation rules using **Java Optional** and a functional approach (`map`, `filter`, `flatMap`, etc.), while keeping the code **null-safe, expressive, and test-driven**.
 
-Duration: _3 hours_
+Rather than being a simple implementation task, this exercise explores how complex business rules can be modeled declaratively using Optional chains and small, composable conditions.
 
-## Description
+---
 
-In this task, you are provided with some classes that are used for insurance calculations.
-In the `insurance` package you have:
-1. `Subject` - the main sealed interface, which must be implemented by insurance subjects.
-2. `Car`, `Accommodation`, `Person` - the subject's insurance is calculated for (which implement the `Subject` interface).
-3. `Currency` - just an `enum` of the currencies provided.
-4. `RepeatablePayment` - represent, for example, rent, salary, or a loan.
-5. `Injury`, `Family` - not subject classes; used to describe a certain part of the subject classes.
+## Goal of the Exercise
 
-These classes a mostly plain data objects without any logic. The only things to highlight are:
-1. Some getters return `Optional` instead of the target type.
-2. Some of these classes implement `Comparable` interface to make it easier to retrieve the required instance
-   from `SortedSet`.
+The main objective was to:
 
-Also, you have `calculator` package. Here you have two main classes:
-1. `InsuranceCoefficient` - a wrapper for `int` value in range **[0; 100]**,
-   which represents the percentage of trustworthy clients.
-2. `InsuranceCalculator<S extends Subject>` - a functional interface,
-   which determines `InsuranceCoefficient` based on the passed `S` instance.
+- Practice extensive use of `Optional` instead of defensive `null` checks
+- Model real-world insurance rules in a clean, readable, and safe way
+- Respect strict business constraints validated through unit tests
+- Avoid throwing exceptions and ensure null-safety at all times
 
-Also, here you can find several `*InsurancePolicies` classes, which provide methods that must be implemented.
-Take a closer look at them and define the requirements.
+---
 
-## Requirements
+## Domain Overview
 
-No implementations must throw an exception, and all of them must be `null`-safe. Objects can be `null` or return `null`.
-Getters that return `Optional` never return `null`.
+The domain is split into two main packages.
 
-All arguments cannot be `null`.
+### insurance package
 
-### AccommodationInsurancePolicies
+Contains the domain model, mostly plain data objects:
 
-#### rentDependentInsurance
+- **Subject** – sealed interface implemented by insurable entities
+- **Car**, **Accommodation**, **Person** – insurance subjects
+- **Currency** – supported currencies
+- **RepeatablePayment** – represents rent, salary, or similar payments
+- **Injury**, **Family** – supporting domain objects
 
-Accepts `BigInteger divider` which is used to adjust the insurance coefficient.
+Notable characteristics:
 
-It must return an insurance coefficient when an accommodation is rented; monthly payment should be in **USD**.
-As a result, for the insurance coefficient, you must divide the rent amount by the divider provided.
-If the resulting insurance coefficient is more than **100**, then `InsuranceCoefficient.MAX` is returned.
-If a condition is not met, then return empty `Optional`.
+- Several getters return `Optional<T>`
+- Some classes implement `Comparable` to simplify selection from `SortedSet`
+- No business logic inside domain objects
 
-1. The accommodation must include `rent`.
-2. The rent period must be in months.
-3. The rent currency must be **USD**.
-4. The rent amount must be greater than **0**.
-5. The coefficient is equal to rent divided by the divider provided in percent (`rent / divider * 100`).
-6. If the relation is more than **100%**, `InsuranceCoefficient.MAX` should be returned.
-7. The default value is `Optional.empty`
+---
 
-#### priceAndRoomsAndAreaDependentInsurance
+### calculator package
 
-Accepts `BigInteger priceThreshold`, which must be met or exceeded by the accommodation price,
-`int roomsThreshold`, which must be met or exceeded by the room counts,
-and `areaThreshold` are the same but for the accommodation area.
+Contains the insurance logic:
 
-Accommodations price, room count, and the area must be greater or equal to their corresponding thresholds.
-If all the conditions are met, `InsuranceCoefficient.MAX` must be returned;
-if not `InsuranceCoefficient.MIN` must be returned.
+- **InsuranceCoefficient** – wrapper for an integer in range `[0–100]`
+- **InsuranceCalculator<S>** – functional interface
+- **InsurancePolicies** – rule definitions for each subject type
 
-1. Accommodation price >= `priceThreshold`
-2. Accommodation rooms >= `roomsThreshold`
-3. Accommodation area >= `areaThreshold`
-4. Return `InsuranceCoefficient.MAX` if all conditions are met
-5. Return `InsuranceCoefficient.MIN` if one or more conditions are not met
+Each policy returns an `Optional<InsuranceCoefficient>` depending on whether all business rules are satisfied.
 
-### CarInsurancePolicies
+---
 
-#### ageDependInsurance
+## General Constraints
 
-Accepts `LocalDate baseDate`, which is used as a pivot point for calculations. All calculations must use it.
-Date-math precision is **1 day**.
+All implementations follow these principles:
 
-The calculator must return:
-1. `InsuranceCoefficient.MAX` if the manufactured date is less than **1 year** from `baseDate`
-2. A coefficient of **70** if less than **5 years**
-3. A coefficient of **30** if less than **10 years**
-4. `InsuranceCoefficient.MIN` if a car is older than **10 years**.
-5. If the manufactured date is unknown, `Optional.empty` must be returned
+- No method throws exceptions
+- All logic is null-safe
+- Any object or collection may be `null`
+- Getters returning `Optional` never return `null`
+- If requirements are not met, the result is `Optional.empty()`
 
-#### priceAndOwningOfFreshCarInsurance
+---
 
-Accepts `LocalDate baseDate` as a base for the date-math calculations,
-`BigInteger priceThreshold` which must be met or exceeded by car price,
-and `Period owningThreshold` - the minimum period of ownership.
+## Accommodation Insurance Policies
 
-The idea is to calculate the insurance coefficient only for cars which are still owned by a person (`soldDate` is not set),
-price is greater or equal to `priceThreshold`, the period from `purchaseDate` to `baseDate`
-is greater or equal to `owningThreshold`.
+### rentDependentInsurance
 
-The resulting coefficient must be based on car price and `priceThreshold`.
-If the price of the car is greater than or equal to three times the `priceThreshold`,
-`InsuranceCoefficient.MAX` must be returned. If it exceeds two times but is less than three times greater,
-a coefficient of **50** must be returned. `InsuranceCoefficient.MIN` must be returned
-if the price is less than or equal to twice the threshold.
-If any of the conditions are not met, `Optional.empty` must be returned.
+Calculates insurance based on monthly rent.
 
-1. `soldDate` must not be set.
-2. `price` must be >= than `priceThreshold`.
-3. `purchaseDate` + `owningThreshold` must be >= `baseDate`.
-4. `InsuranceCoefficient.MAX` must be returned if `price` >= **3** * `priceThreshold`.
-5. A coefficient of **50** must be returned if **3** * `priceThreshold` > `price` >= **2** * `priceThreshold`.
-6. `InsuranceCoefficient.MIN` must be returned if `price` < **2** * `priceThreshold`.
-7. `Optional.empty` must be returned if any of the conditions are not met.
+Conditions:
 
-### PersonInsurancePolicies
+- Rent must exist
+- Rent period must be monthly
+- Rent currency must be USD
+- Rent amount must be greater than 0
 
-#### childrenDependent
+Formula:
+coefficient = min(100, rent / divider * 100)
 
-Accepts `int childrenCountThreshold`. The coefficient must be calculated based on the number of children
-a person has relative to the threshold provided.
+---
 
-1. A person must have a `family`.
-2. A person must have `children`.
-3. The resulting coefficient equals to `min(100, childrenCount / childrenCountThreshold)`.
-4. `InsuranceCoefficient.MIN` must return if any of the conditions are not met.
+### priceAndRoomsAndAreaDependentInsurance
 
-#### employmentDependentInsurance
+Returns `InsuranceCoefficient.MAX` only if all thresholds are met:
 
-Accepts `BigInteger salaryThreshold` and `Set<Currency> currencies`,
-which together define the salary threshold based on the amount and the currency allowed.
+- Price ≥ priceThreshold
+- Rooms ≥ roomsThreshold
+- Area ≥ areaThreshold
 
-1. Person must have an employment history of at least four records.
-2. They must have multi-currency account.
-3. They must not have any recorded injuries.
-4. They must have at least one accommodation (either owned or rented).
-5. They must be currently employed (i.e., the last employment record does not have `endDate`).
-6. `salary` for this job must be in one of the `currencies` provided.
-7. `salary.amount` must be greater than or equal to `salaryThreshold`.
-8. If all conditions are met, a coefficient of 50 must be returned.
-9. If any of the conditions are not met, `Optional.empty` must be returned.
+Otherwise, returns `InsuranceCoefficient.MIN`.
 
-#### accommodationEmergencyInsurance
+---
 
-Accepts `Set<EmergencyStatus> statuses`, which defines the allowed emergency statuses
-of an accommodation owned or rented by a person.
+## Car Insurance Policies
 
-1. A person must have an accommodation.
-2. The calculator must pick the accommodation that is the smallest in area.
-3. Check to make sure its `emergencyStatus` is listed in the `statuses` parameter.
-4. The coefficient is calculated as `100 * (1 - emergencyStatus.ordinal() / EmergencyStatus.values().length)`.
-5. If any of the conditions are not met, `Optional.empty` must be returned.
+### ageDependentInsurance
 
-#### injuryAndRentDependentInsurance
+Based on car age relative to a base date:
 
-Accepts `BigInteger rentThreshold`.
+- Less than 1 year → `InsuranceCoefficient.MAX`
+- Less than 5 years → `70`
+- Less than 10 years → `30`
+- 10 years or more → `InsuranceCoefficient.MIN`
+- Unknown manufacture date → `Optional.empty()`
 
-1. A person must have an injury.
-2. This person must be a culprit of the last injury they have.
-3. The largest accommodation (by area) must be rented.
-4. The rent must be in **GBP**.
-5. The coefficient is calculated as `min(100, 100 * rent / rentThreshold)`.
-6. If any of the conditions are not met, `Optional.empty` must be returned.
+---
+
+### priceAndOwningOfFreshCarInsurance
+
+Applies only if:
+
+- The car is not sold
+- Price ≥ priceThreshold
+- Ownership duration ≥ owningThreshold
+
+Result:
+
+- Price ≥ 3 × threshold → `InsuranceCoefficient.MAX`
+- 2 × threshold ≤ price < 3 × threshold → `50`
+- Price < 2 × threshold → `InsuranceCoefficient.MIN`
+
+---
+
+## Person Insurance Policies
+
+### childrenDependent
+
+Insurance coefficient based on the number of children relative to a threshold:
+
+coefficient = min(100, childrenCount * 100 / threshold)
+
+Requirements:
+
+- Person must have a family
+- Person must have at least one child
+
+---
+
+### employmentDependentInsurance
+
+Returns an insurance coefficient of `50` if all conditions are met:
+
+- At least four employment records
+- Multi-currency account
+- No recorded injuries
+- At least one accommodation
+- Currently employed
+- Salary ≥ threshold
+- Salary currency must be allowed
+
+If any condition is not met, returns `Optional.empty()`.
+
+---
+
+### accommodationEmergencyInsurance
+
+Rules:
+
+- Person must have at least one accommodation
+- The smallest accommodation by area is selected
+- Its emergency status must be allowed
+
+Formula:
+
+100 * (1 - emergencyStatus.ordinal() / totalStatuses)
+---
+
+### injuryAndRentDependentInsurance
+
+Requirements:
+
+- Person must have at least one injury
+- Person must be the culprit of the last injury
+- The largest accommodation (by area) must be rented
+- Rent currency must be GBP
+
+Formula:
+coefficient = min(100, rent * 100 / rentThreshold)
+
+If any condition is not met, returns `Optional.empty()`.
+
+---
+
+## My Approach and Solution
+
+My implementation focuses on:
+
+- Progressive filtering using `Optional`
+- Avoiding nested conditionals
+- Treating `null` and empty collections as valid states
+- Letting tests drive subtle business rules
+- Preferring clarity over premature abstraction
+
+Each policy was refined iteratively by aligning the logic strictly with the expected behavior defined in tests, especially in edge cases involving null values, empty collections, and boundary conditions.
+
+---
+
+## Key Takeaways
+
+- Business rules become clearer when expressed as transformations
+- Tests often reveal implicit requirements
+- `Optional` chains can replace large amounts of defensive code
+- Small logical misinterpretations can cause subtle but critical bugs
+
+
